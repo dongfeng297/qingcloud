@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qingcloud.mapper.CourseMapper">
+
+    <update id="update">
+        update course
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="teacherId != null">teacher_id = #{teacherId},</if>
+            <if test="coverUrl != null">cover_url = #{coverUrl},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="subject != null">subject = #{subject},</if>
+            <if test="grade != null">grade = #{grade},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="courseType != null">course_type = #{courseType}</if>
+        </set>
+        where id = #{id}
+    </update>
+    <select id="pageQuery" resultType="qingcloud.entity.Course"
+            parameterType="qingcloud.dto.ConditonCoursePageQueryDTO">
+        select * from course
+        <where>
+            <if test="grade != null">
+                and grade = #{grade}
+            </if>
+            <if test="courseType != null">
+                and course_type = #{courseType}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by update_time desc
+    </select>
+
+</mapper>
