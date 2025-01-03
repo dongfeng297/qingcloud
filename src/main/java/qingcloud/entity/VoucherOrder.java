@@ -5,11 +5,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @ApiModel(description = "代金券订单实体类")
-public class VoucherOrder {
+public class VoucherOrder implements Serializable {
 
     @ApiModelProperty(value = "主键")
     private Long id;

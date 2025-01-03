@@ -1,9 +1,16 @@
 package qingcloud.service.serviceImpl;
 
 import cn.hutool.core.util.IdUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpApplicationContextClosedException;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import qingcloud.dto.Result;
@@ -18,7 +25,8 @@ import qingcloud.utils.SimpleRedisLock;
 import qingcloud.utils.UserHolder;
 
 import java.time.LocalDateTime;
-
+import java.util.Collections;
+@Slf4j
 @Service
 public class VoucherOrderServiceImpl implements VoucherOrderService {
     @Autowired
@@ -29,10 +37,78 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
     @Lazy
     private VoucherOrderService self;
     @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    @Override
+    private final static DefaultRedisScript<Long> VOUCHER_SCRIPT;
+    private final static String messageQueue="orederVoucher.queue";
+    static {
+        VOUCHER_SCRIPT = new DefaultRedisScript<>();
+        VOUCHER_SCRIPT.setLocation(new ClassPathResource("voucher.lua"));
+        VOUCHER_SCRIPT.setResultType(Long.class);
 
+    }
+
+
+    @Override
     public Result orderVoucher(Long id) {
+        //1.查询优惠券
+        Voucher voucher=voucherMapper.getById(id);
+        if(voucher==null){
+            return Result.fail("优惠券不存在");
+        }
+        //2.判断优惠券时间
+        LocalDateTime beginTime = voucher.getBeginTime();
+        if(LocalDateTime.now().isBefore(beginTime)){
+            return Result.fail("优惠券抢购还未开始");
+        }
+        if(LocalDateTime.now().isAfter(voucher.getEndTime())){
+            return Result.fail("优惠券抢购已经结束");
+        }
+        //3.判断库存是否充足
+        int stock = voucher.getStock();
+        if(stock<=0){
+            return Result.fail("抱歉，你来晚了，优惠券已经被抢光了");
+        }
+
+        //执行lua脚本
+        Long num = stringRedisTemplate.execute(
+                VOUCHER_SCRIPT, Collections.emptyList(),
+                id + "",  //voucherId
+                UserHolder.getUser().getId() + "" //userId
+        );
+        int result = num.intValue();
+        //返回值不为0
+        if(result!=0){
+            return Result.fail(result==1?"库存不足":"不要重复下单");
+        }
+        //加入消息队列 TODO
+        long orderId=IdUtil.getSnowflake().nextId();
+        VoucherOrder voucherOrder = new VoucherOrder();
+        voucherOrder.setId(orderId);
+        voucherOrder.setUserId(UserHolder.getUser().getId());
+        voucherOrder.setVoucherId(id);
+        rabbitTemplate.convertAndSend(messageQueue, voucherOrder);
+        log.info("发送消息成功{}",voucherOrder);
+        //返回订单id
+        return Result.ok(orderId);
+    }
+    @RabbitListener(queues = messageQueue)
+    @Override
+    @Transactional
+    public void createVoucherOrder(VoucherOrder voucherOrder) {
+        try {
+            log.info("接收到消息{}", voucherOrder);
+            voucherMapper.updateStock(voucherOrder.getVoucherId());
+            voucherOrderMapper.addVoucherOrder(voucherOrder);
+        } catch (Exception e) {
+            log.error("创建订单失败", e);
+            throw new AmqpRejectAndDontRequeueException("创建订单失败",e);
+        }
+
+    }
+
+    /*public Result orderVoucher(Long id) {
 
         //1.查询优惠券
         Voucher voucher=voucherMapper.getById(id);
@@ -76,9 +152,9 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         }
 
 
-    }
+    }*/
 
-    @Transactional
+    /*@Transactional
     public Result createVoucherOrder(Long id) {
         //4.一人一单
         Long userId= UserHolder.getUser().getId();
@@ -93,7 +169,7 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
 
         //6.创建订单
         //雪花算法唯一生成订单id
-        long orderId = IdUtil.getSnowflake().nextId();
+        //long orderId = IdUtil.getSnowflake().nextId();
 
         VoucherOrder voucherOrder = new VoucherOrder();
         voucherOrder.setId(orderId);
@@ -103,5 +179,5 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
 
 
         return Result.ok(orderId);
-    }
+    }*/
 }

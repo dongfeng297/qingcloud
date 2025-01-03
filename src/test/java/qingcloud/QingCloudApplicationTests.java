@@ -22,7 +22,7 @@ class QingCloudApplicationTests {
 
     @Test
     void generateUsers() {
-        userService.generateAndSaveUsers(500);
+        userService.generateAndSaveUsers(1000);
     }
 
 

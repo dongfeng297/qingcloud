@@ -22,10 +22,13 @@ public class WebMVCConfig implements WebMvcConfigurer {
                         "/swagger-resources/**",
                         "/webjars/**",
                         "/swagger-ui.html",
-                        "/swagger-ui/**"
+                        "/swagger-ui/**",
+                        "/knife4j/**"
                 ).order(1);
 
-        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).order(0);
+        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).
+                addPathPatterns("/**").
+                order(0);
     }
 
 }
