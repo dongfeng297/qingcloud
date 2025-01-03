@@ -52,11 +52,11 @@ public class CourseServiceImpl implements CourseService {
         //3.获取互斥锁
         String lockKey=LOCK_COURSE_KEY+id;
         //4.获得锁失败则休眠+重试
-        for (int i=0;i<15;i++) {//设置最大重置次数
+        for (int i=0;i<30;i++) {//设置最大重置次数
             boolean isLock = tryLock(lockKey);
             if (!isLock) {
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(20);
                     continue;
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);

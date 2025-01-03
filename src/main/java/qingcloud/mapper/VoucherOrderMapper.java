@@ -11,6 +11,7 @@ public interface VoucherOrderMapper {
     @Insert("insert into voucher_order (id,user_id,voucher_id) values (#{id},#{userId},#{voucherId})")
     void addVoucherOrder(VoucherOrder voucherOrder);
 
-    @Select("select count(*) from voucher_order where user_id = #{userId}")
-    int getByUserId(Long userId);
+
+    @Select("select count(*) from voucher_order where user_id = #{userId} and id = #{id}")
+    int query(Long userId, Long id);
 }

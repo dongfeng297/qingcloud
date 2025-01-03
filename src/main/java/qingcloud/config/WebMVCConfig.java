@@ -13,19 +13,19 @@ public class WebMVCConfig implements WebMvcConfigurer {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(new LoginInterceptor())
-//                .excludePathPatterns(
-//                        "/user/login",
-//                        "/user/code",
-//                        "/doc.html",
-//                        "/v2/api-docs",
-//                        "/swagger-resources/**",
-//                        "/webjars/**",
-//                        "/swagger-ui.html",
-//                        "/swagger-ui/**"
-//                ).order(1);
-//
-//        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).order(0);
+        registry.addInterceptor(new LoginInterceptor())
+                .excludePathPatterns(
+                        "/user/login",
+                        "/user/code",
+                        "/doc.html",
+                        "/v2/api-docs",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**"
+                ).order(1);
+
+        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).order(0);
     }
 
 }

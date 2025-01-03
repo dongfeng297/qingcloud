@@ -3,6 +3,7 @@ package qingcloud.service.serviceImpl;
 import cn.hutool.core.util.IdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import qingcloud.dto.Result;
@@ -13,6 +14,7 @@ import qingcloud.mapper.VoucherMapper;
 import qingcloud.mapper.VoucherOrderMapper;
 import qingcloud.service.VoucherOrderService;
 import qingcloud.service.VoucherService;
+import qingcloud.utils.SimpleRedisLock;
 import qingcloud.utils.UserHolder;
 
 import java.time.LocalDateTime;
@@ -26,6 +28,8 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
     @Autowired
     @Lazy
     private VoucherOrderService self;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
     @Override
 
     public Result orderVoucher(Long id) {
@@ -51,17 +55,26 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
 
 
 
-        //临时代码 TODO
-        UserDTO userDTO = new UserDTO();
-        userDTO.setId(1L);
-        UserHolder.setUser(userDTO);
+//        //临时代码 TODO
+//        UserDTO userDTO = new UserDTO();
+//        userDTO.setId(1L);
+//        UserHolder.setUser(userDTO);
 
         Long userId= UserHolder.getUser().getId();
-        synchronized (userId.toString().intern()){//字符串池中返回相同的对象作为锁
+
+        String key="order:"+userId;
+        SimpleRedisLock lock = new SimpleRedisLock(stringRedisTemplate, key);
+        boolean isLock = lock.tryLock(5L);
+        if(!isLock){
+            return Result.fail("请勿重复下单");
+        }
+        try {
             //加锁是为了保证共享变量（voucherOrder)的线程安全
             return self.createVoucherOrder(id);
-            //先提交事务
-        }//再释放锁
+        } finally {
+            lock.unlock();
+        }
+
 
     }
 
@@ -69,7 +82,7 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
     public Result createVoucherOrder(Long id) {
         //4.一人一单
         Long userId= UserHolder.getUser().getId();
-        int count = voucherOrderMapper.getByUserId(userId);
+        int count = voucherOrderMapper.query(userId,id);
         if(count>0) return Result.fail("您已经抢购过优惠券了");
 
         //5.扣减库存
