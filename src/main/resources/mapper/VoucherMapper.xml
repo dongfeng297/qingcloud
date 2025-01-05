@@ -5,4 +5,14 @@
 
 <mapper namespace="qingcloud.mapper.VoucherMapper">
 
+<select id="getVouchers" parameterType="java.util.List" resultType="qingcloud.entity.Voucher">
+    SELECT * FROM voucher
+    <where>
+        id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </where>
+</select>
+
 </mapper>

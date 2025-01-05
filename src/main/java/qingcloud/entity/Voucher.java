@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
@@ -24,11 +25,11 @@ public class Voucher {
     @ApiModelProperty(value = "使用规则")
     private String rules;
 
-    @ApiModelProperty(value = "实际支付金额（分）", required = true)
-    private Long payValue;
+    @ApiModelProperty(value = "实际支付金额", required = true)
+    private BigDecimal payValue;
 
-    @ApiModelProperty(value = "原价金额（分）", required = true)
-    private Long actualValue;
+    @ApiModelProperty(value = "原价金额", required = true)
+    private BigDecimal actualValue;
 
     @ApiModelProperty(value = "库存", required = true)
     private Integer stock;
@@ -36,11 +37,11 @@ public class Voucher {
     @ApiModelProperty(value = "状态(1:上架, 2:下架, 3:过期)", example = "1", required = true)
     private Integer status;
 
-    @ApiModelProperty(value = "生效时间", required = true)
+    @ApiModelProperty(value = "抢购开始时间", required = true)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime beginTime;
 
-    @ApiModelProperty(value = "失效时间", required = true)
+    @ApiModelProperty(value = "抢购结束时间", required = true)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
 

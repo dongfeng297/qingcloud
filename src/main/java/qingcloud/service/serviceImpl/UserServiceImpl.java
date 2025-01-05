@@ -12,17 +12,28 @@ import qingcloud.dto.LoginDTO;
 import qingcloud.dto.Result;
 import qingcloud.dto.UserDTO;
 import qingcloud.entity.User;
+import qingcloud.entity.Voucher;
+import qingcloud.entity.VoucherOrder;
 import qingcloud.mapper.UserMapper;
+import qingcloud.mapper.VoucherMapper;
+import qingcloud.mapper.VoucherOrderMapper;
 import qingcloud.service.UserService;
+import qingcloud.service.VoucherOrderService;
+import qingcloud.service.VoucherService;
 import qingcloud.utils.MailUtils;
 import qingcloud.utils.RegexUtils;
+import qingcloud.vo.VoucherVo;
 
 import javax.mail.MessagingException;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static qingcloud.constant.RedisConstant.LOGIN_CODE_KEY;
 import static qingcloud.constant.RedisConstant.LOGIN_USER_TTL;
@@ -34,6 +45,11 @@ public class UserServiceImpl implements UserService {
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private VoucherOrderMapper voucherOrderMapper;
+
+    @Autowired
+    private VoucherMapper voucherMapper;
 
     @Override
     public Result login(LoginDTO loginDTO) {
@@ -91,9 +107,34 @@ public class UserServiceImpl implements UserService {
         //保存到redis
         stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + email, code);
         stringRedisTemplate.expire(LOGIN_CODE_KEY + email, RedisConstant.LOGIN_CODE_TTL, TimeUnit.MINUTES);
-        MailUtils.sendMail(email, code);
+        MailUtils.sendMail(email, "尊敬的用户:你好!\n注册验证码为:" + code + "(有效期为一分钟,请勿告知他人)");
 
         return Result.ok();
+    }
+
+    @Override
+    public Result getVouchers(Long userId) {
+       List<Long> ids= voucherOrderMapper.getVoucherIds(userId);
+       if(ids==null ||ids.isEmpty()){
+           return Result.ok(Collections.emptyList());
+       }
+       List<Voucher> vouchers=voucherMapper.getVouchers(ids);
+        List<VoucherVo> voucherVos = vouchers.stream()
+                .map(voucher -> BeanUtil.copyProperties(voucher, VoucherVo.class))
+                .collect(Collectors.toList());
+        return Result.ok(voucherVos);
+    }
+
+    //扣减余额
+    @Override
+    public boolean deductBalance(Long userId, BigDecimal payAmount) {
+        BigDecimal balance = userMapper.getBalance(userId);
+        if(balance.compareTo(payAmount) < 0){
+            return false;
+        }
+        userMapper.updateBalance(userId,payAmount);
+        return true;
+
     }
 
     private User createUserWithEmail(String emali) {
@@ -116,7 +157,11 @@ public class UserServiceImpl implements UserService {
                 throw new RuntimeException(e);
             }
             String email = "user" + i + "@example.com";
-            User user = createUserWithEmail(email);
+            User user = new User();
+            user.setEmail(email);
+            user.setUsername("user_" + System.currentTimeMillis());
+            user.setId((long) (i + 62));
+            userMapper.saveWithId(user);
 
             // 为每个用户生成token并保存到Redis
             saveUserTokenToRedis(user);

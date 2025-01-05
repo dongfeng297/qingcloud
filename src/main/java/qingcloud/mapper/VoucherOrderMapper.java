@@ -3,8 +3,11 @@ package qingcloud.mapper;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Service;
 import qingcloud.entity.VoucherOrder;
+
+import java.util.List;
 
 @Mapper
 public interface VoucherOrderMapper {
@@ -14,4 +17,16 @@ public interface VoucherOrderMapper {
 
     @Select("select count(*) from voucher_order where user_id = #{userId} and id = #{id}")
     int query(Long userId, Long id);
+
+    @Select("select * from voucher_order where user_id = #{userId}")
+    List<VoucherOrder> getListByUserId(Long userId);
+
+    @Select("select voucher_id from voucher_order where user_id = #{userId} and status=2")
+    List<Long> getVoucherIds(Long userId);
+
+    @Update("update voucher_order set status = #{status} where user_id = #{userId} and id = #{voucherId}")
+    void updateStatus(Long userId,Long voucherId,Integer status);
+
+    @Select("select status from voucher_order where user_id = #{userId} and voucher_id = #{voucherId}")
+    Integer getStatus(Long userId, Long voucherId);
 }

@@ -2,9 +2,11 @@ package qingcloud.entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -46,6 +48,12 @@ public class User implements Serializable {
 
     @ApiModelProperty(value = "更新时间")
     private LocalDateTime updateTime;
+
+    @ApiModelProperty(value = "地址")
+    private String address;
+
+    @ApiModelProperty(value = "家教课程交通费用")
+    private BigDecimal trafficFee;
 
 
 }

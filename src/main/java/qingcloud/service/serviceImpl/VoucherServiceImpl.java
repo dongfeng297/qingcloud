@@ -9,6 +9,7 @@ import qingcloud.mapper.VoucherMapper;
 import qingcloud.service.VoucherService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static qingcloud.constant.RedisConstant.SECKILL_STOCK_KEY;
 
@@ -24,6 +25,17 @@ public class VoucherServiceImpl implements VoucherService {
         stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY+voucher.getId(),voucher.getStock()+"");
         return Result.ok();
     }
+
+    @Override
+    public Result getVoucher(Long id) {
+         Voucher voucher=voucherMapper.getById(id);
+         if(voucher==null){
+             return Result.fail("优惠券不存在");
+         }
+         return Result.ok(voucher);
+    }
+
+
 
 
 }

@@ -16,6 +16,12 @@ public class VoucherController {
     public Result addVoucher(@RequestBody Voucher voucher) {
         return voucherService.addVoucher(voucher);
     }
+    @GetMapping("/{id}")
+    public Result getVoucher(@PathVariable("id") Long id) {
+        return voucherService.getVoucher(id);
+    }
+
+
 
 
 }

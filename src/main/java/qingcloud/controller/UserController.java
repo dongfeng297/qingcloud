@@ -1,5 +1,6 @@
 package qingcloud.controller;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,5 +34,10 @@ public class UserController {
         return userService.sendCode(email);
     }
 
+    @ApiOperation(value = "获取优惠券列表")
+    @GetMapping("/voucher")
+    public Result getVouchers( @RequestParam("id") Long userId){
+        return userService.getVouchers(userId);
+    }
 
 }

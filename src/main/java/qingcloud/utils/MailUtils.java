@@ -11,15 +11,15 @@ import java.util.Properties;
 
 public class MailUtils {
     public static void main(String[] args) throws MessagingException {
-        sendMail("2978618707@qq.com",new MailUtils().achieveCode());
+        sendMail("2978618707@qq.com","尊敬的用户:你好!\n注册验证码为:" + new MailUtils().achieveCode() + "(有效期为一分钟,请勿告知他人)");
     }
-    public static void sendMail(String email,String code)throws MessagingException {
+    public static void sendMail(String email,String Info)throws MessagingException {
         Properties properties = new Properties();
         properties.put("mail.smtp.auth",true);
         properties.put("mail.smtp.host","smtp.qq.com");
-        properties.put("mail.smtp.port",465);
+        properties.put("mail.smtp.port","465");
         properties.put("mail.user","2978618707@qq.com");
-        properties.put("mail.password","xmgcozhoiydodfdh");
+        properties.put("mail.password","hcubkkegtybbdgag");
         properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         properties.put("mail.smtp.socketFactory.fallback", "false");
         Authenticator authenticator = new Authenticator() {
@@ -37,7 +37,7 @@ public class MailUtils {
         InternetAddress to = new InternetAddress(email);
         message.setRecipient(MimeMessage.RecipientType.TO,to);
         message.setSubject("来自qingcloud的邮件");
-        message.setContent("尊敬的用户:你好!\n注册验证码为:" + code + "(有效期为一分钟,请勿告知他人)", "text/html;charset=UTF-8");
+        message.setText(Info, "UTF-8");
         Transport.send(message);
     }
     public static String achieveCode() {  //由于数字 1 、 0 和字母 O 、l 有时分不清楚，所以，没有数字 1 、 0
