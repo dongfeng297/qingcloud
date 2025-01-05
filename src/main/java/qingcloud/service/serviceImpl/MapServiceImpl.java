@@ -2,13 +2,13 @@ package qingcloud.service.serviceImpl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import qingcloud.config.CourseConfig;
-import qingcloud.config.MapConfig;
 import qingcloud.dto.Result;
 import qingcloud.mapper.UserMapper;
 import qingcloud.service.MapService;
@@ -17,22 +17,19 @@ import qingcloud.utils.UserHolder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 @Slf4j
 @Service
 public class MapServiceImpl implements MapService {
-    @Autowired
-    private MapConfig mapConfig;
+
 
     @Autowired
     private CourseConfig courseConfig;
     @Autowired
     private UserMapper userMapper;
 
-    private static final String AMAP_DISTANCE_URL = "https://restapi.amap.com/v3/distance";
+    private static final String AMAP_DISTANCE_URL = "https://apis.map.qq.com/ws/distance/v1/matrix?mode=driving";
 
 
     @Override
@@ -54,14 +51,15 @@ public class MapServiceImpl implements MapService {
 
             // 2. 计算距离
             Map<String, Object> paramMap = new HashMap<>();
-            paramMap.put("origins", courseConfig.getOrgLatitude() + "," + courseConfig.getOrgLongitude());
-            paramMap.put("destination", lat + "," + lng);
-            paramMap.put("key", mapConfig.getKey());
+            paramMap.put("from", courseConfig.getOrgLatitude() + "," + courseConfig.getOrgLongitude());
+            paramMap.put("to", lat + "," + lng);
+            paramMap.put("key",
+                    "YDHBZ-CMGKC-7QP2A-AP5YU-KZ6OV-PDBA5");
 
-            String distanceResponse = HttpUtil.get(AMAP_DISTANCE_URL, paramMap);
+            String distanceResponse = HttpUtil.post(AMAP_DISTANCE_URL, paramMap);
             JSONObject distanceJson = JSONUtil.parseObj(distanceResponse);
 
-            if (!"1".equals(distanceJson.getStr("status"))) {
+            if (!"0".equals(distanceJson.getStr("status"))) {
                 return Result.fail("距离计算失败");
             }
 
@@ -69,9 +67,16 @@ public class MapServiceImpl implements MapService {
             userMapper.updateAdderss(userId,address);
 
             // 获取距离（米）
-            int distance = distanceJson.getJSONArray("results")
+            Object result = distanceJson.getObj("result");
+
+            // 假设 distanceJson 是一个 JSONObject
+            int distance = distanceJson.getJSONObject("result")
+                    .getJSONArray("rows")
+                    .getJSONObject(0)
+                    .getJSONArray("elements")
                     .getJSONObject(0)
                     .getInt("distance");
+
 
             // 转换为公里
             BigDecimal distanceKm = new BigDecimal(distance).divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP);

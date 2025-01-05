@@ -3,6 +3,7 @@ package qingcloud.mapper;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.web.bind.annotation.GetMapping;
 import qingcloud.dto.CourseOrderDTO;
 import qingcloud.entity.CourseOrder;
@@ -25,6 +26,6 @@ public interface CourseOrderMapper {
     CourseOrder getById(Long orderId);
 
 
-    @Insert("update course_order set status=#{paid},pay_time=#{now} where id=#{orderId}")
+    @Update("update course_order set status=#{paid},pay_time=#{now} where id=#{orderId}")
     void updateStatusAndPayTime(Long orderId, int paid, LocalDateTime now);
 }

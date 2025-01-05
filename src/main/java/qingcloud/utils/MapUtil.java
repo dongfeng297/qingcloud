@@ -25,7 +25,7 @@ import java.util.Map;
 public class MapUtil {
 
     private static final String API_KEY =
-            "VNXBZ-HZ5W4-KAVUS-FLLDD-BCGEJ-6DFE2"; // 替换为你的腾讯地图API密钥
+                                    "YDHBZ-CMGKC-7QP2A-AP5YU-KZ6OV-PDBA5"; // 替换为你的腾讯地图API密钥
     private static final String BASE_URL = "https://apis.map.qq.com/ws/geocoder/v1/";
 
     public static Map<String, Object> getURLContent(String address) {
@@ -33,7 +33,7 @@ public class MapUtil {
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             // URL编码处理地址
-            String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8.toString());
+            String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8);
             String url = BASE_URL + "?address=" + encodedAddress + "&key=" + API_KEY;
 
             HttpGet httpGet = new HttpGet(url);
@@ -72,7 +72,7 @@ public class MapUtil {
     }
 
     public static void main(String[] args) {
-        Map<String, Object> map = getURLContent("吉林省长春市净月国家高新技术产业开发区");
+        Map<String, Object> map = getURLContent("四川省成都市电子科技大学沙河校区");
         System.out.println("lat=" + map.get("lat") + ",lng=" + map.get("lng"));
     }
 }

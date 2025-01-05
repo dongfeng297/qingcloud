@@ -17,4 +17,8 @@ public class PayController {
     public Result payOrder(Long orderId) {
         return payService.pay(orderId);
     }
+    @PostMapping("/voucherOrder")
+    public Result payVoucherOrder(Long orderId) {
+        return payService.payVoucher(orderId);
+    }
 }

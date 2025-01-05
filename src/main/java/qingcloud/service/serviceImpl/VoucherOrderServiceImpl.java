@@ -3,6 +3,7 @@ package qingcloud.service.serviceImpl;
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpApplicationContextClosedException;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -82,17 +83,23 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         if(result!=0){
             return Result.fail(result==1?"库存不足":"不要重复下单");
         }
-        //加入消息队列 TODO
-        long orderId=IdUtil.getSnowflake().nextId();
-        VoucherOrder voucherOrder = new VoucherOrder();
-        voucherOrder.setId(orderId);
-        voucherOrder.setUserId(UserHolder.getUser().getId());
-        voucherOrder.setVoucherId(id);
-        rabbitTemplate.convertAndSend(messageQueue, voucherOrder);
-        log.info("发送消息成功{}",voucherOrder);
+        //加入消息队列进行下单
+        long orderId= 0;
+        try {
+            orderId = IdUtil.getSnowflake().nextId();
+            VoucherOrder voucherOrder = new VoucherOrder();
+            voucherOrder.setId(orderId);
+            voucherOrder.setUserId(UserHolder.getUser().getId());
+            voucherOrder.setVoucherId(id);
+            rabbitTemplate.convertAndSend(messageQueue, voucherOrder);
+            log.info("发送消息成功{}",voucherOrder);
+        } catch (AmqpException e) {
+            log.error("发送消息失败", e);
+        }
         //返回订单id
         return Result.ok(orderId);
     }
+
     @RabbitListener(queues = messageQueue)
     @Override
     @Transactional

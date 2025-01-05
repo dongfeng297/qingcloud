@@ -73,7 +73,7 @@ public class CourseOrderServiceImpl implements CourseOrderService {
         Voucher voucher = voucherMapper.getById(voucherId);
         //修改优惠券订单状态为已核销
         voucherOrderMapper.updateStatus(userId,voucherId,3);
-        BigDecimal discount = voucher.getActualValue().subtract(voucher.getPayValue());
+        BigDecimal discount = voucher.getActualValue();
 
         //实际需要支付的费用
         BigDecimal payValue=total.subtract(discount);

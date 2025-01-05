@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -46,4 +47,7 @@ public class VoucherOrder implements Serializable {
     @ApiModelProperty(value = "更新时间", example = "2023-10-01 12:38:00")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+
+    @ApiModelProperty(value = "支付金额")
+    private BigDecimal payAmount;
 }

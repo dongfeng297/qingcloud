@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Service;
 import qingcloud.entity.VoucherOrder;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -29,4 +31,11 @@ public interface VoucherOrderMapper {
 
     @Select("select status from voucher_order where user_id = #{userId} and voucher_id = #{voucherId}")
     Integer getStatus(Long userId, Long voucherId);
+
+    @Select("select * from voucher_order where id = #{orderId}")
+    VoucherOrder getById(Long orderId);
+
+
+    @Update("update voucher_order set status= #{paid},pay_time = #{now},pay_amount = #{payValue} where id = #{orderId}")
+    void update(Long orderId, Integer paid, LocalDateTime now, BigDecimal payValue);
 }
