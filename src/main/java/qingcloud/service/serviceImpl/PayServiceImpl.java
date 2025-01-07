@@ -1,11 +1,14 @@
 package qingcloud.service.serviceImpl;
 
+import cn.hutool.core.lang.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 import qingcloud.dto.Result;
 import qingcloud.entity.CourseOrder;
 import qingcloud.entity.PayOrder;
@@ -55,11 +58,24 @@ public class PayServiceImpl implements PayService {
         courseOrderMapper.updateStatusAndPayTime(orderId,PAID, LocalDateTime.now());
 
         //异步通知发送邮件
-        try {
-            rabbitTemplate.convertAndSend("pay.direct","course.pay.success",courseOrder.getId());
-        } catch (AmqpException e) {
-            log.error("发送邮件失败",e);
-        }
+
+        CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
+        cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+            @Override
+            public void onFailure(Throwable ex){
+                log.error("消息发送失败",ex);
+            }
+            @Override
+            public void onSuccess(CorrelationData.Confirm result) {
+                if(result.isAck()){
+                    log.debug("消息发送成功,收到ACK");
+                }else{
+                    log.error("消息发送失败,收到NACK,reason:{}",result.getReason());
+                }
+            }
+        });
+        rabbitTemplate.convertAndSend("pay.direct","course.pay.success",courseOrder.getId(),cd);
+
 
         return Result.ok();
 
@@ -86,12 +102,27 @@ public class PayServiceImpl implements PayService {
         }
         voucherOrderMapper.update(orderId,PAID, LocalDateTime.now(),voucher.getPayValue());
         //异步通知发送邮件
-        try {
-            rabbitTemplate.convertAndSend("pay.direct","voucher.pay.success",voucherOrder.getId());
-        } catch (AmqpException e) {
-            log.error("发送邮件失败",e);
-        }
+
+        CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
+        cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+            @Override
+            public void onFailure(Throwable ex) {
+                log.error("消息发送失败",ex);
+            }
+            @Override
+            public void onSuccess(CorrelationData.Confirm result) {
+                if(result.isAck()){
+                    log.debug("消息发送成功,收到ACK");
+                }else{
+                    log.error("消息发送失败,收到NACK,reason:{}",result.getReason());
+                }
+            }
+        });
+        rabbitTemplate.convertAndSend("pay.direct","voucher.pay.success",voucherOrder.getId(),cd);
+        
 
         return Result.ok();
     }
+
+
 }

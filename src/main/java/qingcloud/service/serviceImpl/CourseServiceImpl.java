@@ -47,8 +47,6 @@ public class CourseServiceImpl implements CourseService {
             return Result.fail("课程不存在");
         }
 
-
-
         //3.获取互斥锁
         String lockKey=LOCK_COURSE_KEY+id;
         //4.获得锁失败则休眠+重试

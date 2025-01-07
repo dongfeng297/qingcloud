@@ -21,4 +21,7 @@ public interface VoucherMapper {
 
 
     List<Voucher> getVouchers(List<Long> ids);
+
+    @Update("update voucher set stock = stock + 1 where id = #{voucherId}")
+    void rollbackStock(Long voucherId);
 }

@@ -40,16 +40,12 @@ public class PaySuccessListener {
     ))
     public void courseOrderPaySuccess(Long orderId) throws MessagingException {
         try {
-            log.info("收到支付成功消息，开始处理订单：{}", orderId);
-
             // 获取订单信息
             CourseOrder courseOrder = courseOrderMapper.getById(orderId);
             if (courseOrder == null) {
                 log.error("未找到订单信息，订单号：{}", orderId);
                 return;
             }
-
-
             // 获取用户信息
             Long userId = courseOrder.getUserId();
             User user = userMapper.getById(userId);
@@ -68,7 +64,6 @@ public class PaySuccessListener {
             log.info("准备发送邮件到用户邮箱：{}", email);
             MailUtils.sendMail(email, "尊敬的用户" + name + ":\n  您在" + payTime + "为购买课程支付了" + payAmount + "元,订单号为" + orderId);
             log.info("邮件发送成功，订单号：{}", orderId);
-
         } catch (Exception e) {
             log.error("处理支付成功消息失败，订单号：{}，异常信息：", orderId, e);
             throw e;
@@ -81,16 +76,12 @@ public class PaySuccessListener {
     ))
     public void voucherOrderPaySuccess(Long orderId) throws MessagingException {
         try {
-            log.info("收到支付成功消息，开始处理订单：{}", orderId);
-
             // 获取订单信息
             VoucherOrder voucherOrder = voucherOrderMapper.getById(orderId);
             if (voucherOrder == null) {
                 log.error("未找到订单信息，订单号：{}", orderId);
                 return;
             }
-
-
             // 获取用户信息
             Long userId = voucherOrder.getUserId();
             User user = userMapper.getById(userId);
@@ -98,7 +89,6 @@ public class PaySuccessListener {
                 log.error("未找到用户信息，用户ID：{}", userId);
                 return;
             }
-
             String email = user.getEmail();
             String name = user.getName();
             BigDecimal payAmount = voucherOrder.getPayAmount();

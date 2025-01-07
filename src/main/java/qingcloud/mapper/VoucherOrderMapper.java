@@ -26,7 +26,7 @@ public interface VoucherOrderMapper {
     @Select("select voucher_id from voucher_order where user_id = #{userId} and status=2")
     List<Long> getVoucherIds(Long userId);
 
-    @Update("update voucher_order set status = #{status} where user_id = #{userId} and id = #{voucherId}")
+    @Update("update voucher_order set status = #{status} where user_id = #{userId} and voucher_id = #{voucherId}")
     void updateStatus(Long userId,Long voucherId,Integer status);
 
     @Select("select status from voucher_order where user_id = #{userId} and voucher_id = #{voucherId}")
@@ -38,4 +38,13 @@ public interface VoucherOrderMapper {
 
     @Update("update voucher_order set status= #{paid},pay_time = #{now},pay_amount = #{payValue} where id = #{orderId}")
     void update(Long orderId, Integer paid, LocalDateTime now, BigDecimal payValue);
+
+    @Update("update voucher_order set status= #{canceled},pay_over_time = #{now} where id = #{orderId}")
+    void updateStatusAndPayOverTime(Long orderId, int canceled, LocalDateTime now);
+
+    @Update("update voucher_order set status= #{paid} where id = #{orderId}")
+    void rallbackStatus(Long orderId,Integer paid);
+
+    @Select("select * from voucher_order where voucher_id=#{voucherId} and user_id=#{userId}")
+    VoucherOrder getByVoucherIdAndUserId(Long voucherId, Long userId);
 }

@@ -26,6 +26,9 @@ public interface CourseOrderMapper {
     CourseOrder getById(Long orderId);
 
 
-    @Update("update course_order set status=#{paid},pay_time=#{now} where id=#{orderId}")
-    void updateStatusAndPayTime(Long orderId, int paid, LocalDateTime now);
+    @Update("update course_order set status=#{i},pay_time=#{now} where id=#{orderId}")
+    void updateStatusAndPayTime(Long orderId, Integer i, LocalDateTime now);
+
+    @Update("update course_order set status=#{i},pay_over_time=#{now} where id=#{orderId}")
+    void updateStatusAndPayOverTime(Long orderId, Integer i, LocalDateTime now);
 }

@@ -14,18 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @Author Jsxs
- * @Date 2023/4/4 20:28
- * @PackageName:com.jsxs
- * @ClassName: MapUtil
- * @Description: 地址转经纬度工具类
- * @Version 1.0
- */
+
 public class MapUtil {
 
-    private static final String API_KEY =
-                                    "YDHBZ-CMGKC-7QP2A-AP5YU-KZ6OV-PDBA5"; // 替换为你的腾讯地图API密钥
+    private static final String API_KEY = "YDHBZ-CMGKC-7QP2A-AP5YU-KZ6OV-PDBA5"; // 腾讯地图API密钥
     private static final String BASE_URL = "https://apis.map.qq.com/ws/geocoder/v1/";
 
     public static Map<String, Object> getURLContent(String address) {

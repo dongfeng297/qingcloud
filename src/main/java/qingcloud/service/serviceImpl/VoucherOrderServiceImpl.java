@@ -1,11 +1,15 @@
 package qingcloud.service.serviceImpl;
 
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpApplicationContextClosedException;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -14,6 +18,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 import qingcloud.dto.Result;
 import qingcloud.dto.UserDTO;
 import qingcloud.entity.Voucher;
@@ -66,11 +71,6 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         if(LocalDateTime.now().isAfter(voucher.getEndTime())){
             return Result.fail("优惠券抢购已经结束");
         }
-        //3.判断库存是否充足
-        int stock = voucher.getStock();
-        if(stock<=0){
-            return Result.fail("抱歉，你来晚了，优惠券已经被抢光了");
-        }
 
         //执行lua脚本
         Long num = stringRedisTemplate.execute(
@@ -85,17 +85,32 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         }
         //加入消息队列进行下单
         long orderId= 0;
-        try {
-            orderId = IdUtil.getSnowflake().nextId();
-            VoucherOrder voucherOrder = new VoucherOrder();
-            voucherOrder.setId(orderId);
-            voucherOrder.setUserId(UserHolder.getUser().getId());
-            voucherOrder.setVoucherId(id);
-            rabbitTemplate.convertAndSend(messageQueue, voucherOrder);
-            log.info("发送消息成功{}",voucherOrder);
-        } catch (AmqpException e) {
-            log.error("发送消息失败", e);
-        }
+
+        orderId = IdUtil.getSnowflake().nextId();
+        VoucherOrder voucherOrder = new VoucherOrder();
+        voucherOrder.setId(orderId);
+        voucherOrder.setUserId(UserHolder.getUser().getId());
+        voucherOrder.setVoucherId(id);
+
+        CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
+        cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+            @Override
+            public void onFailure(Throwable ex) {
+                log.error("消息发送失败",ex);
+            }
+
+            @Override
+            public void onSuccess(CorrelationData.Confirm result) {
+                if(result.isAck()){
+                    log.debug("消息发送成功,收到ACK");
+                }else{
+                    log.error("消息发送失败,收到NACK,reason:{}",result.getReason());
+                }
+            }
+        });
+
+        rabbitTemplate.convertAndSend(messageQueue, voucherOrder,cd);
+
         //返回订单id
         return Result.ok(orderId);
     }
@@ -108,6 +123,18 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
             log.info("接收到消息{}", voucherOrder);
             voucherMapper.updateStock(voucherOrder.getVoucherId());
             voucherOrderMapper.addVoucherOrder(voucherOrder);
+            //发送延迟消息
+            try {
+                rabbitTemplate.convertAndSend("delay.direct", "voucher.order.delay", voucherOrder.getId(), new MessagePostProcessor() {
+                    @Override
+                    public Message postProcessMessage(Message message) throws AmqpException {
+                        message.getMessageProperties().setDelay(30000);//延迟10秒方便测试
+                        return message;
+                    }
+                });
+            } catch (AmqpException e) {
+                log.error("发送优惠券订单延迟消息失败", e);
+            }
         } catch (Exception e) {
             log.error("创建订单失败", e);
             throw new AmqpRejectAndDontRequeueException("创建订单失败",e);
