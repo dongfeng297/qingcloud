@@ -2,10 +2,13 @@ package qingcloud.service.serviceImpl;
 
 import cn.hutool.core.lang.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.core.ApplicationPushBuilder;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.concurrent.ListenableFutureCallback;
@@ -14,6 +17,7 @@ import qingcloud.entity.CourseOrder;
 import qingcloud.entity.PayOrder;
 import qingcloud.entity.Voucher;
 import qingcloud.entity.VoucherOrder;
+import qingcloud.event.CourseStaticEvent;
 import qingcloud.mapper.*;
 import qingcloud.service.PayService;
 import qingcloud.service.UserService;
@@ -37,6 +41,8 @@ public class PayServiceImpl implements PayService {
 
     @Autowired
     private VoucherMapper voucherMapper;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -76,6 +82,8 @@ public class PayServiceImpl implements PayService {
         });
         rabbitTemplate.convertAndSend("pay.direct","course.pay.success",courseOrder.getId(),cd);
 
+        //异步通知课程购买数+1
+        applicationEventPublisher.publishEvent(CourseStaticEvent.purchaseEvent(courseOrder.getCourseId()));
 
         return Result.ok();
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qingcloud.mapper.CourseRankingMapper">
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="rankingId">
+        insert into course_ranking(course_id, ranking_position) values
+        <foreach collection="rankingList" item="item" separator=",">
+            (#{item.courseId}, #{item.rankingPositon})
+        </foreach>
+    </insert>
+</mapper>

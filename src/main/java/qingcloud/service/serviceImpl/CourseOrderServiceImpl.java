@@ -53,47 +53,39 @@ public class CourseOrderServiceImpl implements CourseOrderService {
         map.put("userId",userId);
         map.put("courseId",courseId);
 
-        //用于发送延时消息，包含课程订单id,可能包含优惠券订单id
-        Map<String, Long> dMap = new HashMap<>();
-        dMap.put("courseOrderId",orderId);
-
         //查询订单表判断是否已经购买过
         int count=courseOrderMapper.getByUserIdAndCourseId(map);
         if(count>0) return Result.fail("您已经购买过该课程");
-        //查询数据库获得课程类型
+        //查询课程
         Course course=courseMapper.getById(courseId);
-        if(course.getCourseType()==1){
-            //如果是普通课程，直接下单返回
-            map.put("price",course.getPrice());
-            courseOrderMapper.addOrder(map);
-            try {
-                rabbitTemplate.convertAndSend("delay.direct","course.order.delay",dMap,message -> {
-                    message.getMessageProperties().setDelay(10000);
-                    return message;
-                });
-            } catch (AmqpException e) {
-                log.error("发送课程订单延时消息失败",e);
-            }
-            return Result.ok(orderId);
-        }
-        //如果是家教课程
+        //查询优惠券状态
         Integer status=voucherOrderMapper.getStatus(userId,voucherId);
         if(status!=2){
             return Result.fail("优惠券状态异常");
         }
-        //交通费
-        BigDecimal trafficFee=userMapper.getTrafficFee(userId);
-        if (trafficFee == null) {
-            trafficFee = BigDecimal.ZERO; // 设置默认值
+        //创建延时消息，加入优惠券订单id，课程订单id
+        Map<String, Long> dMap = new HashMap<>();
+        dMap.put("courseOrderId",orderId);
+        VoucherOrder voucherOrder=voucherOrderMapper.getByVoucherIdAndUserId(voucherId,userId);
+        dMap.put("voucherOrderId",voucherOrder.getId());
+
+        BigDecimal total=course.getPrice();
+        if(course.getCourseType()==2){
+            //交通费
+            BigDecimal trafficFee=userMapper.getTrafficFee(userId);
+            if (trafficFee == null) {
+                trafficFee = BigDecimal.ZERO; // 设置默认值
+            }
+            //课程费用加上交通费
+            total=total.add(trafficFee);
         }
-        //课程费用加上交通费
-        BigDecimal total=course.getPrice().subtract(trafficFee);
         //优惠卷折扣
         Voucher voucher = voucherMapper.getById(voucherId);
+        BigDecimal discount = voucher.getActualValue();
 
         //修改优惠券订单状态为已核销
         voucherOrderMapper.updateStatus(userId,voucherId,3);
-        BigDecimal discount = voucher.getActualValue();
+
 
         //实际需要支付的费用
         BigDecimal payValue=total.subtract(discount);
@@ -101,12 +93,6 @@ public class CourseOrderServiceImpl implements CourseOrderService {
         map.put("price",payValue);
         map.put("voucherId",voucherId);
         //创建订单
-
-        //向延时消息中加入优惠券订单id
-        VoucherOrder voucherOrder=voucherOrderMapper.getByVoucherIdAndUserId(voucherId,userId);
-        dMap.put("voucherOrderId",voucherOrder.getId());
-
-
         courseOrderMapper.addOrderWithVoucher(map);
         try {
             rabbitTemplate.convertAndSend("delay.direct","course.order.delay",dMap,message -> {
@@ -120,7 +106,5 @@ public class CourseOrderServiceImpl implements CourseOrderService {
         return Result.ok(orderId);
 
     }
-
-
 
 }

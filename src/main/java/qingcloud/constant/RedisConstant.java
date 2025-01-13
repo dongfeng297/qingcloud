@@ -19,4 +19,13 @@ public class RedisConstant {
     public static final String FEED_KEY = "feed:";
 
     public static final String USER_SIGN_KEY = "sign:";
+
+    // 课程统计信息（购买数、点赞数）
+    public static final String COURSE_PURCHASE = "course:purchase:";//使用 zset
+    public static final String COURSE_LIKE = "course:like:"; //使用string
+
+
+    public static final String TEACHER_FANS = "teacher:fans"; //使用 zset
+
+
 }

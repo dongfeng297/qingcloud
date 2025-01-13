@@ -3,7 +3,6 @@ package qingcloud.service.serviceImpl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.IdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -13,16 +12,13 @@ import qingcloud.dto.Result;
 import qingcloud.dto.UserDTO;
 import qingcloud.entity.User;
 import qingcloud.entity.Voucher;
-import qingcloud.entity.VoucherOrder;
 import qingcloud.mapper.UserMapper;
 import qingcloud.mapper.VoucherMapper;
 import qingcloud.mapper.VoucherOrderMapper;
 import qingcloud.service.UserService;
-import qingcloud.service.VoucherOrderService;
-import qingcloud.service.VoucherService;
 import qingcloud.utils.MailUtils;
 import qingcloud.utils.RegexUtils;
-import qingcloud.vo.VoucherVo;
+import qingcloud.vo.VoucherVO;
 
 import javax.mail.MessagingException;
 import java.io.BufferedWriter;
@@ -119,8 +115,8 @@ public class UserServiceImpl implements UserService {
            return Result.ok(Collections.emptyList());
        }
        List<Voucher> vouchers=voucherMapper.getVouchers(ids);
-        List<VoucherVo> voucherVos = vouchers.stream()
-                .map(voucher -> BeanUtil.copyProperties(voucher, VoucherVo.class))
+        List<VoucherVO> voucherVos = vouchers.stream()
+                .map(voucher -> BeanUtil.copyProperties(voucher, VoucherVO.class))
                 .collect(Collectors.toList());
         return Result.ok(voucherVos);
     }

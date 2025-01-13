@@ -1,4 +1,4 @@
 package qingcloud.vo;
 
-public class CourseVo {
+public class CourseVO {
 }

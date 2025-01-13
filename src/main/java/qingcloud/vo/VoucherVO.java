@@ -1,10 +1,11 @@
 package qingcloud.vo;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class VoucherVo {
+public class VoucherVO implements Serializable {
 
     private Long id;
 

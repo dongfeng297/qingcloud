@@ -4,12 +4,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @ApiModel(description = "课程订单表")
-public class CourseOrder {
+public class CourseOrder implements Serializable {
 
     @ApiModelProperty(value = "主键")
     private Long id;

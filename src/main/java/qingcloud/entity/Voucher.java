@@ -5,13 +5,14 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
 @Data
 @ApiModel(description = "优惠券")
-public class Voucher {
+public class Voucher implements Serializable {
 
     @ApiModelProperty(value = "主键id")
     private Long id;
