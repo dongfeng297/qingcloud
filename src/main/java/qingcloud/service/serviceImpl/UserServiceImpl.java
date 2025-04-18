@@ -6,6 +6,7 @@ import cn.hutool.core.lang.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import qingcloud.constant.RedisConstant;
 import qingcloud.dto.LoginDTO;
 import qingcloud.dto.Result;
@@ -98,11 +99,11 @@ public class UserServiceImpl implements UserService {
         if (RegexUtils.isEmailInvalid(email)) {
             return Result.fail("邮箱格式错误");
         }
-        //发送验证码
+        //生成随机验证码
         String code = MailUtils.achieveCode();
         //保存到redis
-        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + email, code);
-        stringRedisTemplate.expire(LOGIN_CODE_KEY + email, RedisConstant.LOGIN_CODE_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + email, code,RedisConstant.LOGIN_CODE_TTL, TimeUnit.MINUTES);
+        //发送邮件
         MailUtils.sendMail(email, "尊敬的用户:你好!\n注册验证码为:" + code + "(有效期为一分钟,请勿告知他人)");
 
         return Result.ok();
@@ -122,6 +123,7 @@ public class UserServiceImpl implements UserService {
     }
 
     //扣减余额
+    @Transactional
     @Override
     public boolean deductBalance(Long userId, BigDecimal payAmount) {
         BigDecimal balance = userMapper.getBalance(userId);
@@ -156,8 +158,7 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setEmail(email);
             user.setUsername("user_" + System.currentTimeMillis());
-            user.setId((long) (i + 62));
-            userMapper.saveWithId(user);
+            userMapper.save(user);
 
             // 为每个用户生成token并保存到Redis
             saveUserTokenToRedis(user);

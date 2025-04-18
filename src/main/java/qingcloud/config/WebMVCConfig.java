@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import qingcloud.utils.LoginInterceptor;
-import qingcloud.utils.RefreshTokenInterceptor;
+import qingcloud.interceptor.LoginInterceptor;
+import qingcloud.interceptor.RefreshTokenInterceptor;
 
 @Configuration
 public class WebMVCConfig implements WebMvcConfigurer {

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import qingcloud.annotation.Log;
 import qingcloud.dto.Result;
 import qingcloud.service.MapService;
 
@@ -24,7 +25,8 @@ public class MapController {
      * @return Result
      */
     @GetMapping("/calculate")
-    @ApiOperation(value = "计算交通价格")
+    @ApiOperation(value = "计算交通距离和价格")
+    @Log("计算交通价格")
     public Result getTrafficFee(@RequestParam String address) {
         return mapService.getTrafficFee(address);
     }

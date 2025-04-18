@@ -43,7 +43,7 @@ public class MapServiceImpl implements MapService {
             // 1. 调用腾讯地图API进行地理编码获取经纬度
             Map<String, Object> map = MapUtil.getURLContent(address);
             if (map == null || !map.containsKey("lng") || !map.containsKey("lat")) {
-                return Result.fail("地理编码失败");
+                return Result.fail("获取用户地址经纬度失败");
             }
 
             String lng = (String) map.get("lng");

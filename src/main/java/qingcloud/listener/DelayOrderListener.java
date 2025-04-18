@@ -8,6 +8,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import qingcloud.constant.RedisConstant;
 import qingcloud.entity.CourseOrder;
 import qingcloud.entity.VoucherOrder;
@@ -39,6 +40,7 @@ public class DelayOrderListener {
             exchange = @Exchange(name = "delay.direct",delayed = "true"),
             key="course.order.delay"
     ))
+    @Transactional
     public void delayCourseOrder(Map<String,Long> map){
         Long orderId = map.get("courseOrderId");
         Long voucherOrderId = map.get("voucherOrderId");
@@ -60,6 +62,7 @@ public class DelayOrderListener {
             exchange = @Exchange(name = "delay.direct",delayed = "true"),
             key="voucher.order.delay"
     ))
+    @Transactional
     public void delayVoucherOrder(Long orderId){
         VoucherOrder voucherOrder = voucherOrderMapper.getById(orderId);
         if(voucherOrder.getStatus()==UNPAID){

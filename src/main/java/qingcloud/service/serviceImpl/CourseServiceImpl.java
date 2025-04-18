@@ -5,9 +5,11 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import qingcloud.constant.RedisConstant;
 import qingcloud.dto.ConditonCoursePageQueryDTO;
 import qingcloud.dto.PageResult;
@@ -21,7 +23,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static qingcloud.constant.RedisConstant.*;
-
+@Slf4j
 @Service
 public class CourseServiceImpl implements CourseService {
     @Autowired
@@ -57,7 +59,9 @@ public class CourseServiceImpl implements CourseService {
                     Thread.sleep(20);
                     continue;
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    // 记录日志并继续重试
+                    log.error("获取锁失败，重试中...", e);
+                    continue;
                 }
             }
 
@@ -72,8 +76,6 @@ public class CourseServiceImpl implements CourseService {
                 if("".equals(courseJson1)){
                     return Result.fail("课程不存在");
                 }
-
-
                 //5.获取锁成功查数据库重建缓存
                 Course course = courseMapper.getById(id);
                 if (course == null) {
@@ -98,6 +100,7 @@ public class CourseServiceImpl implements CourseService {
         courseMapper.deleteById(id);
         return Result.ok();
     }
+    @Transactional
     @Override
     public Result updateCourse(Course course) {
         if(course.getId()==null){
@@ -120,7 +123,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     Boolean tryLock(String key){
-        Boolean flag=stringRedisTemplate.opsForValue().setIfAbsent(key,"1",10,TimeUnit.SECONDS);
+        Boolean flag=stringRedisTemplate.opsForValue().setIfAbsent(key,"1",3,TimeUnit.SECONDS);
         return Boolean.TRUE.equals(flag);
     }
     void unLock(String key){

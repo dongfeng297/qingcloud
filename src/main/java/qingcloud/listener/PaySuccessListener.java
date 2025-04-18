@@ -61,7 +61,6 @@ public class PaySuccessListener {
             LocalDateTime payTime = courseOrder.getPayTime();
 
             // 发送邮件
-            log.info("准备发送邮件到用户邮箱：{}", email);
             MailUtils.sendMail(email, "尊敬的用户" + name + ":\n  您在" + payTime + "为购买课程支付了" + payAmount + "元,订单号为" + orderId);
             log.info("邮件发送成功，订单号：{}", orderId);
         } catch (Exception e) {

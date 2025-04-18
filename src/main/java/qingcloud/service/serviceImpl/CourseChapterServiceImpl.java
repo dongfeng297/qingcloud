@@ -17,4 +17,9 @@ public class CourseChapterServiceImpl implements CourseChapterService {
         courseChapterMapper.addCourseChapter(courseChapter);
         return Result.ok();
     }
+
+    @Override
+    public Result getById(Long id) {
+        return null;
+    }
 }

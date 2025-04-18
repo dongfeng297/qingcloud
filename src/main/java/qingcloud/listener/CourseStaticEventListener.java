@@ -60,7 +60,7 @@ public class CourseStaticEventListener {
         try {
             // 更新课程购买数量（ZSet方式存储）
             stringRedisTemplate.opsForZSet().incrementScore(
-                    COURSE_PURCHASE,
+                    COURSE_PURCHASE_KEY,
                     courseId.toString(),
                     1
             );
@@ -76,7 +76,7 @@ public class CourseStaticEventListener {
         try {
             // 更新课程点赞数（String方式存储）
             stringRedisTemplate.opsForValue().increment(
-                    COURSE_LIKE + courseId
+                    COURSE_LIKE_KEY + courseId
             );
         } catch (Exception e) {
             log.error("Handle course like error, courseId: {}", courseId, e);
@@ -89,7 +89,7 @@ public class CourseStaticEventListener {
     private void handleCancelLike(Long courseId) {
         try {
             stringRedisTemplate.opsForValue().decrement(
-                    COURSE_LIKE + courseId
+                    COURSE_LIKE_KEY + courseId
             );
         } catch (Exception e) {
             log.error("Handle cancel like error, courseId: {}", courseId, e);
@@ -103,7 +103,7 @@ public class CourseStaticEventListener {
         try {
             // 更新教师粉丝数（ZSet方式存储）
             stringRedisTemplate.opsForZSet().incrementScore(
-                    TEACHER_FANS,
+                    TEACHER_FANS_KEY,
                     teacherId.toString(),
                     1
             );
@@ -118,7 +118,7 @@ public class CourseStaticEventListener {
     private void handleTeacherUnfollow(Long teacherId) {
         try {
             stringRedisTemplate.opsForZSet().incrementScore(
-                    TEACHER_FANS,
+                    TEACHER_FANS_KEY,
                     teacherId.toString(),
                     -1
             );

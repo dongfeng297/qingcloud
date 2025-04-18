@@ -5,4 +5,6 @@ import qingcloud.entity.CourseChapter;
 
 public interface CourseChapterService {
     Result addCourseChapter(CourseChapter courseChapter);
+
+    Result getById(Long id);
 }

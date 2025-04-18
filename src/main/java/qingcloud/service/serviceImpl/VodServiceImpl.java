@@ -24,6 +24,7 @@ public class VodServiceImpl implements VodService {
     @Autowired
     private VodUtil vodUtil;
 
+
     @Override
     public Result uploadVideo(MultipartFile file) {
         try {
@@ -38,13 +39,14 @@ public class VodServiceImpl implements VodService {
                     title,
                     fileName,
                     inputStream);
-            // 指定加密模板ID
+            // 指定加密转码模板ID
             request.setTemplateGroupId("5ee20a46283ce0a7d4bcec962c5e2558");
 
             UploadVideoImpl uploader = new UploadVideoImpl();
             UploadStreamResponse response = uploader.uploadStream(request);
 
             if (response.isSuccess()) {
+                //保存videoId到数据库
                 return Result.ok(response.getVideoId());
             } else {
                 return Result.fail("上传视频失败：" + response.getMessage());
@@ -71,6 +73,7 @@ public class VodServiceImpl implements VodService {
         }
     }
 
+    //用不上
     @Override
     public Result getPlayUrl(String videoId) {
         try {

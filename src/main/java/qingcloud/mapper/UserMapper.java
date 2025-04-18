@@ -34,6 +34,6 @@ public interface UserMapper {
     @Select("select * from user where id=#{userId}")
     User getById(Long userId);
 
-    @Insert("insert into user (id,username,email) values(#{id},#{username},#{email})")
-    void saveWithId(User user);
+
+
 }

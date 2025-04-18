@@ -42,7 +42,7 @@ public class RankingServiceImpl implements RankingService {
         // 1. 获取课程购买排行
         Set<ZSetOperations.TypedTuple<String>> topCourses =
                 stringRedisTemplate.opsForZSet().reverseRangeWithScores(
-                        COURSE_PURCHASE,
+                        COURSE_PURCHASE_KEY,
                         0,
                         9  // 获取前10名
                 );
@@ -79,6 +79,7 @@ public class RankingServiceImpl implements RankingService {
             }
 
         }
+        //保存到数据库或许不太需要
         if (rankingList != null && !rankingList.isEmpty()) {
             // 批量保存ranking信息（用作历史记录）
             courseRankingMapper.insertBatch(rankingList);
@@ -92,7 +93,7 @@ public class RankingServiceImpl implements RankingService {
         // 2. 获取教师粉丝排行
         Set<ZSetOperations.TypedTuple<String>> topTeachers =
                 stringRedisTemplate.opsForZSet().reverseRangeWithScores(
-                        TEACHER_FANS,
+                        TEACHER_FANS_KEY,
                         0,
                         9
                 );

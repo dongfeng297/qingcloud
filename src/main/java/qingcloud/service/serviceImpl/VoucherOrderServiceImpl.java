@@ -96,15 +96,15 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
             @Override
             public void onFailure(Throwable ex) {
-                log.error("消息发送失败",ex);
+                log.error("创建订单消息发送失败",ex);
             }
 
             @Override
             public void onSuccess(CorrelationData.Confirm result) {
                 if(result.isAck()){
-                    log.debug("消息发送成功,收到ACK");
+                    log.debug("创建订单消息发送成功,收到ACK");
                 }else{
-                    log.error("消息发送失败,收到NACK,reason:{}",result.getReason());
+                    log.error("创建订单消息发送失败,收到NACK,reason:{}",result.getReason());
                 }
             }
         });

@@ -1,6 +1,7 @@
-package qingcloud.utils;
+package qingcloud.interceptor;
 
 import org.springframework.web.servlet.HandlerInterceptor;
+import qingcloud.utils.UserHolder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

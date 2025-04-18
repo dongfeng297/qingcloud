@@ -90,6 +90,7 @@ public class PayServiceImpl implements PayService {
     }
 
     @Override
+    @Transactional
     public Result payVoucher(Long orderId) {
         VoucherOrder voucherOrder = voucherOrderMapper.getById(orderId);
         if (voucherOrder == null) {
@@ -109,7 +110,7 @@ public class PayServiceImpl implements PayService {
             return Result.fail("支付失败");
         }
         voucherOrderMapper.update(orderId,PAID, LocalDateTime.now(),voucher.getPayValue());
-        //异步通知发送邮件
+        //异步通知发送邮件（最好用spring事件）
 
         CorrelationData cd = new CorrelationData(UUID.randomUUID().toString());
         cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
